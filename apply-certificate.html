@@ -316,12 +316,26 @@
 
     try {
       // Fetch JSON Data
-      const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
-        fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/certificatesdetailsread.json').then(res => res.json())
+      const apiBase = window.location.hostname === "localhost"
+        ? "http://localhost:5000"
+        : "https://studentera.live";
+
+      const [
+        validStudentIds,
+        internshipProgress,
+        completedInternship,
+        certificatesRaw
+      ] = await Promise.all([
+        fetch(`${apiBase}/generatedstudentidofregisteredstudentatstudenterastudentid`).then(res => res.json()),
+        fetch(`${apiBase}/checkprogressofinternshipofusersinternshipprogress.json`).then(res => res.json()),
+        fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
+        fetch(`${apiBase}/certificatesdetailsread.json`).then(res => res.json())
       ]);
+
+      // Ensure certificates is always an array
+      const certificates = Array.isArray(certificatesRaw)
+        ? certificatesRaw
+        : (certificatesRaw.certificates || certificatesRaw.data || []);
 
       // Verification Logic
       if (!validStudentIds.validStudentIds.includes(studentId)) {
@@ -485,10 +499,6 @@
     };
   }
 
-
-
-
-
   // Download Certificate with delay
   function downloadCertificate() {
     const canvas = document.getElementById("certificateCanvas");
@@ -506,8 +516,6 @@
     }, 5000); // 5 seconds delay
   }
 </script>
-
-
 </body>
 
 </html>

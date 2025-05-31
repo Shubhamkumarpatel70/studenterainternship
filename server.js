@@ -309,6 +309,7 @@ app.get('/api/internship-domains', async (req, res) => {
   }
 });
 
+// API to get a specific internship domain by name
 app.get('/api/internship-domains/:domainName', async (req, res) => {
   try {
     const { domainName } = req.params;
@@ -502,6 +503,9 @@ app.get('/api/internship-domains/:domainName/students', async (req, res) => {
   }
 });
 
+// ============= CERTIFICATE DETAILS ENDPOINTS =============
+
+// API to save certificate details
 app.post('/api/certificate-details', async (req, res) => {
   try {
     const { 
@@ -534,6 +538,7 @@ app.post('/api/certificate-details', async (req, res) => {
       });
     }
     
+    // Create new certificate detail object
     const newCertificateDetail = {
       studentId,
       certificateNumber,
@@ -565,6 +570,7 @@ app.post('/api/certificate-details', async (req, res) => {
   }
 });
 
+// API to get all certificate details
 app.get('/api/certificate-details', async (req, res) => {
   try {
     const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
@@ -578,6 +584,7 @@ app.get('/api/certificate-details', async (req, res) => {
   }
 });
 
+// API to get certificate details by certificate number
 app.get('/api/certificate-details/:certificateNumber', async (req, res) => {
   try {
     const { certificateNumber } = req.params;
@@ -602,6 +609,7 @@ app.get('/api/certificate-details/:certificateNumber', async (req, res) => {
   }
 });
 
+// API to get certificate details by student ID
 app.get('/api/certificate-details/student/:studentId', async (req, res) => {
   try {
     const { studentId } = req.params;
@@ -645,6 +653,7 @@ app.put('/api/certificate-details/:certificateNumber', async (req, res) => {
       });
     }
     
+    // Update the certificate fields if provided
     if (studentId) certificateDetails[certificateIndex].studentId = studentId;
     if (name) certificateDetails[certificateIndex].name = name;
     if (course) certificateDetails[certificateIndex].course = course;
