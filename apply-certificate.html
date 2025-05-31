@@ -316,33 +316,19 @@
 
     try {
       // Fetch JSON Data
+      const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
+        fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/userrandomstudenteracheckcertificates.json').then(res => res.json())
+      ]);
 
-
-const apiBase = window.location.hostname === "localhost"
-  ? "http://localhost:5000"
-  : "https://studentera.live";
-
-const [
-  validStudentIds,
-  internshipProgress,
-  completedInternship,
-  certificatesRaw
-] = await Promise.all([
-  fetch(`${apiBase}/generatedstudentidofregisteredstudentatstudenterastudentid`).then(res => res.json()),
-  fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
-  fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
-  fetch(`${apiBase}/api/certificate-details`).then(res => res.json())
-]);
-
-const certificates = Array.isArray(certificatesRaw)
-  ? certificatesRaw
-  : (certificatesRaw.certificates || certificatesRaw.data || []);
-
-if (!validStudentIds || !Array.isArray(validStudentIds.validStudentIds) || !validStudentIds.validStudentIds.includes(studentId)) {
-  showMessage("Invalid Student ID.", "error");
-  spinner.classList.add("hidden");
-  return;
-}
+      // Verification Logic
+      if (!validStudentIds.validStudentIds.includes(studentId)) {
+        showMessage("Invalid Student ID.", "error");
+        spinner.classList.add("hidden");
+        return;
+      }
 
       const internshipStatus = internshipProgress.find(entry => entry.studentId === studentId);
       if (!internshipStatus || internshipStatus.status !== "complete") {
@@ -499,6 +485,10 @@ if (!validStudentIds || !Array.isArray(validStudentIds.validStudentIds) || !vali
     };
   }
 
+
+
+
+
   // Download Certificate with delay
   function downloadCertificate() {
     const canvas = document.getElementById("certificateCanvas");
@@ -516,6 +506,8 @@ if (!validStudentIds || !Array.isArray(validStudentIds.validStudentIds) || !vali
     }, 5000); // 5 seconds delay
   }
 </script>
+
+
 </body>
 
 </html>
