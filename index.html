@@ -391,6 +391,201 @@
     </div>
 </section>
 
+<!-- Notification Section for Updates -->
+<section id="notifications" class="py-8 bg-gradient-to-r from-blue-600 to-indigo-700">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 relative overflow-hidden notification-card opacity-0 translate-y-16" id="notification-card">
+            <!-- Decorative elements -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full -mr-16 -mt-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-indigo-100 rounded-full -ml-12 -mb-12"></div>
+            
+            <div class="relative flex flex-col md:flex-row items-center justify-between">
+                <!-- Icon and heading -->
+                <div class="flex items-center mb-4 md:mb-0">
+                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">Stay Updated!</h3>
+                        <div class="marquee-container mt-2 bg-blue-50 rounded-lg overflow-hidden">
+                            <div class="marquee-content" id="notification-marquee">
+                                <p class="text-blue-700 font-medium py-2 whitespace-nowrap">Loading notifications...</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 mt-2">We regularly update our internship opportunities and student programs</p>
+                    </div>
+                </div>
+                
+                <!-- CTA Button -->
+                <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <a href="internship-zone.html" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-indigo-800 transition duration-300 text-center">
+                        View Latest Internships
+                    </a>
+                    <a href="user-dashboard.html" class="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-6 py-3 rounded-lg font-medium hover:from-teal-600 hover:to-emerald-700 transition duration-300 text-center">
+                        Check Your Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Add animation styles -->
+<style>
+    .notification-card {
+        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+    
+    .notification-card.show {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+    
+    @keyframes floatNotification {
+        0% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+        100% {
+            transform: translateY(0);
+        }
+    }
+    
+    .notification-card.show {
+        animation: floatNotification 4s ease-in-out infinite;
+    }
+    
+    /* Marquee (scrolling text) styles */
+    .marquee-container {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .marquee-content {
+        display: inline-block;
+        white-space: nowrap;
+        animation: marquee 20s linear infinite;
+    }
+    
+    @keyframes marquee {
+        0% {
+            transform: translateX(100%);
+        }
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+    
+    /* Pause animation on hover */
+    .marquee-container:hover .marquee-content {
+        animation-play-state: paused;
+    }
+</style>
+
+<!-- Add scroll animation script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationCard = document.getElementById('notification-card');
+        const notificationMarquee = document.getElementById('notification-marquee');
+        const STORAGE_KEY = 'studentera_notifications';
+        
+        // Function to check if element is in viewport
+        function isInViewport(element) {
+            const rect = element.getBoundingClientRect();
+            return (
+                rect.top <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.bottom >= 0
+            );
+        }
+        
+        // Function to handle scroll event
+        function handleScroll() {
+            if (isInViewport(notificationCard) && !notificationCard.classList.contains('show')) {
+                notificationCard.classList.add('show');
+            }
+        }
+        
+        // Function to load notifications from localStorage
+        function loadNotifications() {
+            let notifications = [];
+            const storedNotifications = localStorage.getItem(STORAGE_KEY);
+            
+            if (storedNotifications) {
+                notifications = JSON.parse(storedNotifications);
+            } else {
+                // Default notifications if none exist
+                notifications = [
+                    { id: 1, text: 'New internship opportunities available!', emoji: '🔔', active: true },
+                    { id: 2, text: 'Certificate verification now available', emoji: '📝', active: true },
+                    { id: 3, text: 'Updated student programs for 2023-24', emoji: '🎓', active: true },
+                    { id: 4, text: 'New industry partners joined our network', emoji: '💼', active: true },
+                    { id: 5, text: 'Registration open for summer internships', emoji: '📢', active: true }
+                ];
+                // Save default notifications
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
+            }
+            
+            // Filter active notifications
+            const activeNotifications = notifications.filter(n => n.active);
+            
+            if (activeNotifications.length === 0) {
+                notificationMarquee.innerHTML = '<p class="text-blue-700 font-medium py-2 whitespace-nowrap">No active notifications at this time</p>';
+                return;
+            }
+            
+            // Create notification text
+            const notificationText = activeNotifications
+                .map(n => `${n.emoji} ${n.text}`)
+                .join(' &nbsp;&nbsp;|&nbsp;&nbsp; ');
+            
+            notificationMarquee.innerHTML = `<p class="text-blue-700 font-medium py-2 whitespace-nowrap">${notificationText}</p>`;
+        }
+        
+        // Load notifications
+        loadNotifications();
+        
+        // Listen for changes to localStorage (for real-time updates)
+        window.addEventListener('storage', function(e) {
+            if (e.key === STORAGE_KEY) {
+                console.log('Notifications updated in another tab/window');
+                loadNotifications(); // Reload notifications when they change
+            }
+        });
+        
+        // Add scroll event listener
+        window.addEventListener('scroll', handleScroll);
+        
+        // Check on initial load
+        handleScroll();
+        
+        // Add admin links for authorized users (you might want to restrict this in production)
+        const adminLink = document.createElement('a');
+        adminLink.href = 'admin/notifications.html';
+        adminLink.className = 'text-xs text-blue-600 hover:text-blue-800 absolute right-2 bottom-2';
+        adminLink.textContent = 'Manage';
+        adminLink.title = 'Manage Notifications';
+        
+        // Add admin dashboard link
+        const dashboardLink = document.createElement('a');
+        dashboardLink.href = 'admin/index.html';
+        dashboardLink.className = 'text-xs text-blue-600 hover:text-blue-800 absolute right-16 bottom-2';
+        dashboardLink.textContent = 'Admin';
+        dashboardLink.title = 'Admin Dashboard';
+        
+        // Add the admin links to the notification container
+        const notificationContainer = document.querySelector('.marquee-container');
+        notificationContainer.style.position = 'relative';
+        notificationContainer.appendChild(adminLink);
+        notificationContainer.appendChild(dashboardLink);
+    });
+</script>
+
 <!-- Enhanced Why Choose Us Section -->
 <section id="why-choose-us" class="py-20 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">

@@ -175,6 +175,31 @@ app.post('/add-student', async (req, res) => {
   }
 });
 
+// Alias for /add-certificate to support legacy/external clients
+app.post('/add-certificate', async (req, res) => {
+  const { studentId, certificateNumber } = req.body;
+
+  if (!studentId || !certificateNumber) {
+    return res.status(400).json({ success: false, message: 'Missing studentId or certificateNumber' });
+  }
+
+  try {
+    let certificates = await readJsonFile(studentCertificatesFile, []);
+    const existingCertificate = certificates.find(cert => cert.studentId === studentId && cert.certificateNumber === certificateNumber);
+    if (existingCertificate) {
+      return res.status(400).json({ success: false, message: 'Certificate number already exists for this student' });
+    }
+
+    certificates.push({ studentId, certificateNumber });
+    await writeJsonFile(studentCertificatesFile, certificates);
+
+    res.json({ success: true, message: 'Certificate saved successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error saving certificate' });
+  }
+});
+
+
 // API to delete student ID
 app.delete('/delete-student', async (req, res) => {
   const { studentId } = req.body;
