@@ -313,44 +313,15 @@
     messageArea.classList.remove("hidden");
 
     const studentId = document.getElementById("studentId").value;
-    
-    // API base URL - change this to match your server
-    const API_BASE_URL = 'http://localhost:5002';
 
     try {
       // Fetch JSON Data
-      let validStudentIds, internshipProgress, completedInternship, certificatesData;
-      
-      try {
-        // Fetch each file separately to better handle errors
-        const validStudentIdsResponse = await fetch(`${API_BASE_URL}/generatedstudentidofregisteredstudentatstudenterastudentid`);
-        validStudentIds = await validStudentIdsResponse.json();
-        
-        // Fetch internship progress data
-        const internshipProgressResponse = await fetch(`${API_BASE_URL}/data/checkprogressofinternshipofusersinternshipprogress.json`);
-        internshipProgress = await internshipProgressResponse.json();
-        
-        // Fetch completed internships data
-        const completedInternshipResponse = await fetch(`${API_BASE_URL}/progressreportuserofinternshipscompletedinternship`);
-        completedInternship = await completedInternshipResponse.json();
-        
-        // Fetch certificate details
-        const certificatesResponse = await fetch(`${API_BASE_URL}/certificatesdetailsread.json`);
-        certificatesData = await certificatesResponse.json();
-        
-        // Ensure certificates is an array
-        const certificates = certificatesData.certificates;
-        
-        if (!Array.isArray(certificates)) {
-          console.error('Certificates data is not an array:', certificates);
-          throw new Error('Invalid certificates data format');
-        }
-      } catch (fetchError) {
-        console.error('Error fetching data:', fetchError);
-        showMessage("Error loading certificate data. Please try again later.", "error");
-        spinner.classList.add("hidden");
-        return;
-      }
+      const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
+        fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/certificatesdetailsread.json').then(res => res.json())
+      ]);
 
       // Verification Logic
       if (!validStudentIds.validStudentIds.includes(studentId)) {
@@ -373,7 +344,7 @@
         return;
       }
 
-      const certificateDetails = certificatesData.certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
+      const certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
       if (!certificateDetails) {
         showMessage("Certificate details not available.", "error");
         spinner.classList.add("hidden");
