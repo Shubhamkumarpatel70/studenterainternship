@@ -315,17 +315,49 @@
     const studentId = document.getElementById("studentId").value;
 
     try {
-      // Fetch JSON Data
+      // Helper function to safely fetch and parse JSON
+      async function safeJsonFetch(url) {
+        try {
+          const response = await fetch(url);
+          
+          // Check if response is ok (status in the range 200-299)
+          if (!response.ok) {
+            console.warn(`API request to ${url} failed with status: ${response.status}`);
+            return null;
+          }
+          
+          // Check if the content type is JSON
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            return await response.json();
+          } else {
+            console.warn(`API request to ${url} returned non-JSON content type: ${contentType}`);
+            return null;
+          }
+        } catch (error) {
+          console.error(`Error fetching from ${url}:`, error);
+          return null;
+        }
+      }
+      
+      // Fetch JSON Data with error handling
       const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
-        fetch('/generatedstudentidofregisteredstudentatstudenterastudentid').then(res => res.json()),
-        fetch('/checkprogressofinternshipofusersinternshipprogress').then(res => res.json()),
-        fetch('/progressreportuserofinternshipscompletedinternship').then(res => res.json()),
-        fetch('/certificatesdetailsread').then(res => res.json())
+        safeJsonFetch('/generatedstudentidofregisteredstudentatstudenterastudentid'),
+        safeJsonFetch('/checkprogressofinternshipofusersinternshipprogress'),
+        safeJsonFetch('/progressreportuserofinternshipscompletedinternship'),
+        safeJsonFetch('/certificatesdetailsread')
       ]);
 
+      // Check if all API calls failed
+      if (!validStudentIds && !internshipProgress && !completedInternship && !certificates) {
+        showMessage("Unable to connect to the server. Please try again later.", "error");
+        spinner.classList.add("hidden");
+        return;
+      }
+      
       // Verification Logic
       if (!validStudentIds || !validStudentIds.validStudentIds || !validStudentIds.validStudentIds.includes(studentId)) {
-        showMessage("Invalid Student ID.", "error");
+        showMessage("Invalid Student ID or server connection issue.", "error");
         spinner.classList.add("hidden");
         return;
       }
