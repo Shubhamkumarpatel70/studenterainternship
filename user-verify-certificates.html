@@ -304,7 +304,7 @@
 
     // Fetch the certificate JSON data
     try {
-      const response = await fetch('lundi sutri kuch bhi/certificatesdetailsread.json');
+      const response = await fetch('certificatesdetailsread.json');
       const certificates = await response.json();
 
       const certificate = certificates.find(cert => cert.certificateNumber === input);

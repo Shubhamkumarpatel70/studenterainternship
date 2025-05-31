@@ -292,6 +292,17 @@ app.get('/progressreportuserofinternshipscompletedinternship', async (req, res) 
   }
 });
 
+// API to serve certificatesdetailsread.json file
+app.get('/certificatesdetailsread.json', async (req, res) => {
+  try {
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    res.json(certificateDetails);
+  } catch (error) {
+    console.error('Error serving certificate details:', error);
+    res.status(500).json({ success: false, message: 'Error reading certificate details' });
+  }
+});
+
 
 // Route to handle adding a student ID to a specific internship domain
 app.post('/addStudent', async (req, res) => {
