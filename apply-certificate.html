@@ -324,20 +324,24 @@
       ]);
 
       // Verification Logic
-      if (!validStudentIds.validStudentIds.includes(studentId)) {
+      if (!validStudentIds || !validStudentIds.validStudentIds || !validStudentIds.validStudentIds.includes(studentId)) {
         showMessage("Invalid Student ID.", "error");
         spinner.classList.add("hidden");
         return;
       }
 
-      const internshipStatus = internshipProgress.find(entry => entry.studentId === studentId);
+      // Check if internshipProgress is an array before using find
+      const internshipStatus = Array.isArray(internshipProgress) ? 
+        internshipProgress.find(entry => entry.studentId === studentId) : null;
       if (!internshipStatus || internshipStatus.status !== "complete") {
         showMessage("Your task is not complete. Please complete your tasks.", "error");
         spinner.classList.add("hidden");
         return;
       }
 
-      const certificateEntry = completedInternship.find(entry => entry.studentId === studentId);
+      // Check if completedInternship is an array before using find
+      const certificateEntry = Array.isArray(completedInternship) ? 
+        completedInternship.find(entry => entry.studentId === studentId) : null;
       if (!certificateEntry) {
         showMessage("Certificate not found. Please wait.", "error");
         spinner.classList.add("hidden");
@@ -345,11 +349,14 @@
       }
 
       // First try to find certificate details directly by student ID
-      let certificateDetails = certificates.find(entry => entry.studentId === studentId);
-      
-      // If not found by student ID, try to find by certificate number from completedInternship
-      if (!certificateDetails && certificateEntry.certificateNumber) {
-        certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
+      let certificateDetails = null;
+      if (Array.isArray(certificates)) {
+        certificateDetails = certificates.find(entry => entry.studentId === studentId);
+        
+        // If not found by student ID, try to find by certificate number from completedInternship
+        if (!certificateDetails && certificateEntry && certificateEntry.certificateNumber) {
+          certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
+        }
       }
       
       if (!certificateDetails) {
