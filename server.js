@@ -22,7 +22,7 @@ app.get("/", (req, res) => {
 
 // JSON file paths
 const studentsJsonFilePath = 'lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json';
-const certificatesJsonFilePath = 'lundi sutri kuch bhi/userrandomstudenteracheckcertificates.json';
+const certificatesJsonFilePath = 'lundi sutri kuch bhi/certificatesdetailsread.json';
 const studentStatusJsonFilePath = 'lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json';
 const studentCertificatesFile = 'lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json';
 const studentProjectsJsonFilePath = 'lundi sutri kuch bhi/userselffetchtheirprojectsofapplieddomainuserprojects.json';
@@ -264,26 +264,6 @@ app.get('/progressreportuserofinternshipscompletedinternship', async (req, res) 
     res.json(certificates); // Return certificates directly as JSON
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error reading certificate data' });
-  }
-});
-
-// API to fetch all certificate details
-app.get('/certificatesdetailsread', async (req, res) => {
-  try {
-    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
-    res.json(certificateDetails);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error reading certificate details data' });
-  }
-});
-
-// API to fetch internship progress data
-app.get('/checkprogressofinternshipofusersinternshipprogress', async (req, res) => {
-  try {
-    const progressData = await readJsonFile(studentStatusJsonFilePath, []);
-    res.json(progressData);
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error reading internship progress data' });
   }
 });
 

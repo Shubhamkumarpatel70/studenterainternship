@@ -173,8 +173,7 @@
           </div>
           <div class="mb-4">
             <label for="studentId" class="block text-lg font-medium text-gray-700">Student ID</label>
-            <input type="text" id="studentId" name="studentId" class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500" placeholder="Enter your Student ID (e.g., SE123456)" required>
-            <p class="text-sm text-gray-500 mt-1">Your Student ID was provided in your registration confirmation email</p>
+            <input type="text" id="studentId" name="studentId" class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500" placeholder="Enter your Student ID" required>
           </div>
           <div class="mb-4">
             <label for="documentType" class="block text-lg font-medium text-gray-700">Document Type</label>
@@ -291,16 +290,7 @@
   function showMessage(message, type) {
     const messageArea = document.getElementById("messageArea");
     messageArea.textContent = message;
-    
-    // Set appropriate styling based on message type
-    if (type === 'success') {
-      messageArea.className = 'text-sm p-4 mb-6 rounded-md bg-green-100 text-green-700';
-    } else if (type === 'warning') {
-      messageArea.className = 'text-sm p-4 mb-6 rounded-md bg-yellow-100 text-yellow-700';
-    } else { // error or any other type
-      messageArea.className = 'text-sm p-4 mb-6 rounded-md bg-red-100 text-red-700';
-    }
-    
+    messageArea.className = `text-sm p-4 mb-6 rounded-md ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
     messageArea.classList.remove("hidden");
   }
 
@@ -308,19 +298,6 @@
   function closeModal() {
     const modal = document.getElementById("certificateModal");
     if (modal) modal.classList.add("hidden");
-  }
-
-  // Helper function to validate student ID format
-  function isValidStudentIdFormat(studentId) {
-    // Check if studentId is not empty
-    if (!studentId || studentId.trim() === '') {
-      return false;
-    }
-    
-    // Basic format validation - you can customize this based on your actual student ID format
-    // For example, if your student IDs should start with "SE" followed by numbers
-    const studentIdRegex = /^SE\d{6}$/;
-    return studentIdRegex.test(studentId) || studentId.length >= 6;
   }
 
   // Verify and Generate Certificate with Delay
@@ -335,142 +312,39 @@
     messageArea.textContent = "Please wait, your certificate is being generated...";
     messageArea.classList.remove("hidden");
 
-    const studentId = document.getElementById("studentId").value.trim();
-    
-    // Validate student ID format before making API calls
-    if (!isValidStudentIdFormat(studentId)) {
-      showMessage("Invalid Student ID format. Please enter a valid Student ID.", "error");
-      spinner.classList.add("hidden");
-      return;
-    }
+    const studentId = document.getElementById("studentId").value;
 
     try {
-      // Helper function to safely fetch and parse JSON
-      async function safeJsonFetch(url) {
-        try {
-          const response = await fetch(url);
-          
-          // Check if response is ok (status in the range 200-299)
-          if (!response.ok) {
-            console.warn(`API request to ${url} failed with status: ${response.status}`);
-            return null;
-          }
-          
-          // Check if the content type is JSON
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            try {
-              return await response.json();
-            } catch (parseError) {
-              console.error(`Error parsing JSON from ${url}:`, parseError);
-              return null;
-            }
-          } else {
-            console.warn(`API request to ${url} returned non-JSON content type: ${contentType}`);
-            
-            // For debugging: log the first part of the response text
-            try {
-              const text = await response.text();
-              console.warn(`Response starts with: ${text.substring(0, 100)}...`);
-            } catch (e) {
-              console.error("Could not read response text", e);
-            }
-            
-            return null;
-          }
-        } catch (error) {
-          console.error(`Error fetching from ${url}:`, error);
-          return null;
-        }
-      }
-      
-      // Fetch JSON Data with error handling
-      // Use absolute URLs with the correct domain or use relative URLs that match your server setup
+      // Fetch JSON Data
       const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
-        safeJsonFetch('https://studentera.in/api/generatedstudentidofregisteredstudentatstudenterastudentid'),
-        safeJsonFetch('https://studentera.in/api/checkprogressofinternshipofusersinternshipprogress'),
-        safeJsonFetch('https://studentera.in/api/progressreportuserofinternshipscompletedinternship'),
-        safeJsonFetch('https://studentera.in/api/certificatesdetailsread')
+        fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json()),
+        fetch('lundi sutri kuch bhi/certificatesdetailsread.json').then(res => res.json())
       ]);
 
-      // Check if all API calls failed
-      if (!validStudentIds && !internshipProgress && !completedInternship && !certificates) {
-        console.warn("All API calls failed. Using mock data for testing purposes.");
-        
-        // Create mock data for testing - this is a fallback for development/testing
-        let mockValidStudentIds = ["SE123456", "SE234567", "SE345678", "SE456789"]; // Add some sample valid IDs
-        
-        // Add the current student ID to the valid list for testing purposes
-        if (!mockValidStudentIds.includes(studentId)) {
-          mockValidStudentIds.push(studentId);
-        }
-        
-        validStudentIds = { validStudentIds: mockValidStudentIds };
-        internshipProgress = [{ studentId: studentId, status: "complete" }];
-        completedInternship = [{ 
-          studentId: studentId, 
-          certificateNumber: "MOCK-" + Math.random().toString(36).substring(2, 10).toUpperCase() 
-        }];
-        certificates = [{
-          studentId: studentId,
-          name: document.getElementById("name").value,
-          course: "Web Development Internship",
-          issuedDate: new Date().toISOString().split('T')[0],
-          certificateNumber: "MOCK-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
-          duration: "4 weeks"
-        }];
-        
-        showMessage("Using test mode due to server connection issues.", "warning");
-      }
-      
-      // Verification Logic with better error handling
-      if (!validStudentIds) {
-        showMessage("Server connection issue. Please try again later.", "error");
-        spinner.classList.add("hidden");
-        return;
-      }
-      
-      if (!validStudentIds.validStudentIds || !Array.isArray(validStudentIds.validStudentIds)) {
-        showMessage("Invalid response format from server. Please contact support.", "error");
-        spinner.classList.add("hidden");
-        return;
-      }
-      
+      // Verification Logic
       if (!validStudentIds.validStudentIds.includes(studentId)) {
-        showMessage("Invalid Student ID. Please check your Student ID and try again.", "error");
+        showMessage("Invalid Student ID.", "error");
         spinner.classList.add("hidden");
         return;
       }
 
-      // Check if internshipProgress is an array before using find
-      const internshipStatus = Array.isArray(internshipProgress) ? 
-        internshipProgress.find(entry => entry.studentId === studentId) : null;
+      const internshipStatus = internshipProgress.find(entry => entry.studentId === studentId);
       if (!internshipStatus || internshipStatus.status !== "complete") {
         showMessage("Your task is not complete. Please complete your tasks.", "error");
         spinner.classList.add("hidden");
         return;
       }
 
-      // Check if completedInternship is an array before using find
-      const certificateEntry = Array.isArray(completedInternship) ? 
-        completedInternship.find(entry => entry.studentId === studentId) : null;
+      const certificateEntry = completedInternship.find(entry => entry.studentId === studentId);
       if (!certificateEntry) {
         showMessage("Certificate not found. Please wait.", "error");
         spinner.classList.add("hidden");
         return;
       }
 
-      // First try to find certificate details directly by student ID
-      let certificateDetails = null;
-      if (Array.isArray(certificates)) {
-        certificateDetails = certificates.find(entry => entry.studentId === studentId);
-        
-        // If not found by student ID, try to find by certificate number from completedInternship
-        if (!certificateDetails && certificateEntry && certificateEntry.certificateNumber) {
-          certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
-        }
-      }
-      
+      const certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
       if (!certificateDetails) {
         showMessage("Certificate details not available.", "error");
         spinner.classList.add("hidden");
@@ -496,22 +370,12 @@
     }
   }
 
-  // Function to generate the certificate canvas
+  // Function to generate the certificate canvas (no changes here)
   function generateCertificateOnCanvas(details, studentId) {
     const canvas = document.getElementById("certificateCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = 1200; // Increased width for improved layout
     canvas.height = 850; // Increased height for better spacing
-
-    // Ensure details has all required properties
-    details = {
-      name: details.name || "Student Name",
-      course: details.course || "Web Development",
-      issuedDate: details.issuedDate || new Date().toISOString().split('T')[0],
-      certificateNumber: details.certificateNumber || "CERT-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      duration: details.duration || "4 weeks",
-      studentId: details.studentId || studentId
-    };
 
     // Load company logo image
     const logo = new Image();

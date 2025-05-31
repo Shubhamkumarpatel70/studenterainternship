@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "studentId": "ID123",
+    "certificateNumber": "CERT123",
+    "name": "John Doe",
+    "course": "Web Development",
+    "duration": "4 weeks",
+    "college": "ABC College",
+    "issuedDate": "2023-06-15",
+    "createdAt": "2023-06-20T10:30:00.000Z"
+  },
+  {
+    "studentId": "demo",
+    "certificateNumber": "CERT456",
+    "name": "Jane Smith",
+    "course": "Android Development",
+    "duration": "6 weeks",
+    "college": "XYZ University",
+    "issuedDate": "2023-07-10",
+    "createdAt": "2023-07-15T14:45:00.000Z"
+  }
+]
