@@ -173,7 +173,8 @@
           </div>
           <div class="mb-4">
             <label for="studentId" class="block text-lg font-medium text-gray-700">Student ID</label>
-            <input type="text" id="studentId" name="studentId" class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500" placeholder="Enter your Student ID" required>
+            <input type="text" id="studentId" name="studentId" class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-teal-500" placeholder="Enter your Student ID (e.g., SE123456)" required>
+            <p class="text-sm text-gray-500 mt-1">Your Student ID was provided in your registration confirmation email</p>
           </div>
           <div class="mb-4">
             <label for="documentType" class="block text-lg font-medium text-gray-700">Document Type</label>
@@ -309,6 +310,19 @@
     if (modal) modal.classList.add("hidden");
   }
 
+  // Helper function to validate student ID format
+  function isValidStudentIdFormat(studentId) {
+    // Check if studentId is not empty
+    if (!studentId || studentId.trim() === '') {
+      return false;
+    }
+    
+    // Basic format validation - you can customize this based on your actual student ID format
+    // For example, if your student IDs should start with "SE" followed by numbers
+    const studentIdRegex = /^SE\d{6}$/;
+    return studentIdRegex.test(studentId) || studentId.length >= 6;
+  }
+
   // Verify and Generate Certificate with Delay
   async function verifyAndGenerateCertificate(event) {
     event.preventDefault();
@@ -321,7 +335,14 @@
     messageArea.textContent = "Please wait, your certificate is being generated...";
     messageArea.classList.remove("hidden");
 
-    const studentId = document.getElementById("studentId").value;
+    const studentId = document.getElementById("studentId").value.trim();
+    
+    // Validate student ID format before making API calls
+    if (!isValidStudentIdFormat(studentId)) {
+      showMessage("Invalid Student ID format. Please enter a valid Student ID.", "error");
+      spinner.classList.add("hidden");
+      return;
+    }
 
     try {
       // Helper function to safely fetch and parse JSON
@@ -364,19 +385,27 @@
       }
       
       // Fetch JSON Data with error handling
+      // Use absolute URLs with the correct domain or use relative URLs that match your server setup
       const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
-        safeJsonFetch('/generatedstudentidofregisteredstudentatstudenterastudentid'),
-        safeJsonFetch('/checkprogressofinternshipofusersinternshipprogress'),
-        safeJsonFetch('/progressreportuserofinternshipscompletedinternship'),
-        safeJsonFetch('/certificatesdetailsread')
+        safeJsonFetch('https://studentera.in/api/generatedstudentidofregisteredstudentatstudenterastudentid'),
+        safeJsonFetch('https://studentera.in/api/checkprogressofinternshipofusersinternshipprogress'),
+        safeJsonFetch('https://studentera.in/api/progressreportuserofinternshipscompletedinternship'),
+        safeJsonFetch('https://studentera.in/api/certificatesdetailsread')
       ]);
 
       // Check if all API calls failed
       if (!validStudentIds && !internshipProgress && !completedInternship && !certificates) {
         console.warn("All API calls failed. Using mock data for testing purposes.");
         
-        // Create mock data for testing
-        validStudentIds = { validStudentIds: [studentId] }; // Accept any student ID
+        // Create mock data for testing - this is a fallback for development/testing
+        let mockValidStudentIds = ["SE123456", "SE234567", "SE345678", "SE456789"]; // Add some sample valid IDs
+        
+        // Add the current student ID to the valid list for testing purposes
+        if (!mockValidStudentIds.includes(studentId)) {
+          mockValidStudentIds.push(studentId);
+        }
+        
+        validStudentIds = { validStudentIds: mockValidStudentIds };
         internshipProgress = [{ studentId: studentId, status: "complete" }];
         completedInternship = [{ 
           studentId: studentId, 
@@ -394,9 +423,21 @@
         showMessage("Using test mode due to server connection issues.", "warning");
       }
       
-      // Verification Logic
-      if (!validStudentIds || !validStudentIds.validStudentIds || !validStudentIds.validStudentIds.includes(studentId)) {
-        showMessage("Invalid Student ID or server connection issue.", "error");
+      // Verification Logic with better error handling
+      if (!validStudentIds) {
+        showMessage("Server connection issue. Please try again later.", "error");
+        spinner.classList.add("hidden");
+        return;
+      }
+      
+      if (!validStudentIds.validStudentIds || !Array.isArray(validStudentIds.validStudentIds)) {
+        showMessage("Invalid response format from server. Please contact support.", "error");
+        spinner.classList.add("hidden");
+        return;
+      }
+      
+      if (!validStudentIds.validStudentIds.includes(studentId)) {
+        showMessage("Invalid Student ID. Please check your Student ID and try again.", "error");
         spinner.classList.add("hidden");
         return;
       }
