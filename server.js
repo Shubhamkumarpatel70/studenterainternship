@@ -177,6 +177,31 @@ app.post('/add-student', async (req, res) => {
   }
 });
 
+// Add this to your existing server.js file
+
+// API to save full certificate details to certificatesdetailsread.json
+app.post('/api/save-certificate-details', async (req, res) => {
+  const { data, filePath } = req.body;
+
+  if (!data || !filePath) {
+    return res.status(400).json({ success: false, message: 'Missing data or filePath' });
+  }
+
+  try {
+    // Ensure the directory exists
+    const dirPath = path.dirname(filePath);
+    await fs.mkdir(dirPath, { recursive: true }).catch(() => {});
+    
+    // Write the data to the file
+    await writeJsonFile(filePath, data);
+    
+    res.json({ success: true, message: 'Certificate details saved successfully' });
+  } catch (error) {
+    console.error('Error saving certificate details:', error);
+    res.status(500).json({ success: false, message: 'Error saving certificate details' });
+  }
+});
+
 // Alias for /add-certificate to support legacy/external clients
 app.post('/add-certificate', async (req, res) => {
   const { studentId, certificateNumber } = req.body;
