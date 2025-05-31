@@ -267,6 +267,26 @@ app.get('/progressreportuserofinternshipscompletedinternship', async (req, res) 
   }
 });
 
+// API to fetch all certificate details
+app.get('/certificatesdetailsread', async (req, res) => {
+  try {
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    res.json(certificateDetails);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error reading certificate details data' });
+  }
+});
+
+// API to fetch internship progress data
+app.get('/checkprogressofinternshipofusersinternshipprogress', async (req, res) => {
+  try {
+    const progressData = await readJsonFile(studentStatusJsonFilePath, []);
+    res.json(progressData);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error reading internship progress data' });
+  }
+});
+
 
 // Route to handle adding a student ID to a specific internship domain
 app.post('/addStudent', async (req, res) => {

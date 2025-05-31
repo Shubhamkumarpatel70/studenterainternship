@@ -317,10 +317,10 @@
     try {
       // Fetch JSON Data
       const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
-        fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/userrandomstudenteracheckcertificates.json').then(res => res.json())
+        fetch('/generatedstudentidofregisteredstudentatstudenterastudentid').then(res => res.json()),
+        fetch('/checkprogressofinternshipofusersinternshipprogress').then(res => res.json()),
+        fetch('/progressreportuserofinternshipscompletedinternship').then(res => res.json()),
+        fetch('/certificatesdetailsread').then(res => res.json())
       ]);
 
       // Verification Logic
@@ -344,7 +344,14 @@
         return;
       }
 
-      const certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
+      // First try to find certificate details directly by student ID
+      let certificateDetails = certificates.find(entry => entry.studentId === studentId);
+      
+      // If not found by student ID, try to find by certificate number from completedInternship
+      if (!certificateDetails && certificateEntry.certificateNumber) {
+        certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
+      }
+      
       if (!certificateDetails) {
         showMessage("Certificate details not available.", "error");
         spinner.classList.add("hidden");
@@ -370,12 +377,22 @@
     }
   }
 
-  // Function to generate the certificate canvas (no changes here)
+  // Function to generate the certificate canvas
   function generateCertificateOnCanvas(details, studentId) {
     const canvas = document.getElementById("certificateCanvas");
     const ctx = canvas.getContext("2d");
     canvas.width = 1200; // Increased width for improved layout
     canvas.height = 850; // Increased height for better spacing
+
+    // Ensure details has all required properties
+    details = {
+      name: details.name || "Student Name",
+      course: details.course || "Web Development",
+      issuedDate: details.issuedDate || new Date().toISOString().split('T')[0],
+      certificateNumber: details.certificateNumber || "CERT-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
+      duration: details.duration || "4 weeks",
+      studentId: details.studentId || studentId
+    };
 
     // Load company logo image
     const logo = new Image();
