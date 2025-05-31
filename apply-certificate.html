@@ -313,21 +313,33 @@
     messageArea.classList.remove("hidden");
 
     const studentId = document.getElementById("studentId").value;
+    
+    // API base URL - change this to match your server
+    const API_BASE_URL = 'http://localhost:5002';
 
     try {
       // Fetch JSON Data
-      let validStudentIds, internshipProgress, completedInternship, certificates;
+      let validStudentIds, internshipProgress, completedInternship, certificatesData;
       
       try {
         // Fetch each file separately to better handle errors
-        validStudentIds = await fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json());
-        internshipProgress = await fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json());
-        completedInternship = await fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json());
+        const validStudentIdsResponse = await fetch(`${API_BASE_URL}/generatedstudentidofregisteredstudentatstudenterastudentid`);
+        validStudentIds = await validStudentIdsResponse.json();
         
-        // Explicitly ensure certificates is an array
-        const certificatesResponse = await fetch('lundi sutri kuch bhi/certificatesdetailsread.json');
-        const certificatesData = await certificatesResponse.json();
-        certificates = Array.isArray(certificatesData) ? certificatesData : [];
+        // Fetch internship progress data
+        const internshipProgressResponse = await fetch(`${API_BASE_URL}/data/checkprogressofinternshipofusersinternshipprogress.json`);
+        internshipProgress = await internshipProgressResponse.json();
+        
+        // Fetch completed internships data
+        const completedInternshipResponse = await fetch(`${API_BASE_URL}/progressreportuserofinternshipscompletedinternship`);
+        completedInternship = await completedInternshipResponse.json();
+        
+        // Fetch certificate details
+        const certificatesResponse = await fetch(`${API_BASE_URL}/certificatesdetailsread.json`);
+        certificatesData = await certificatesResponse.json();
+        
+        // Ensure certificates is an array
+        const certificates = certificatesData.certificates;
         
         if (!Array.isArray(certificates)) {
           console.error('Certificates data is not an array:', certificates);
@@ -361,7 +373,7 @@
         return;
       }
 
-      const certificateDetails = certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
+      const certificateDetails = certificatesData.certificates.find(entry => entry.certificateNumber === certificateEntry.certificateNumber);
       if (!certificateDetails) {
         showMessage("Certificate details not available.", "error");
         spinner.classList.add("hidden");
