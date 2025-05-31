@@ -202,6 +202,34 @@ app.post('/api/save-certificate-details', async (req, res) => {
   }
 });
 
+// Add this to your server.js file
+
+// API to update the certificates JSON file
+app.post('/update-certificates-json', async (req, res) => {
+  const { data, filePath } = req.body;
+
+  if (!data || !data.certificates) {
+    return res.status(400).json({ success: false, message: 'Missing or invalid data' });
+  }
+
+  try {
+    // Use the certificateDetailsFilePath from your server configuration
+    // or the provided filePath as a fallback
+    const targetPath = certificateDetailsFilePath || filePath || 'lundi sutri kuch bhi/certificatesdetailsread.json';
+    
+    // Ensure the directory exists
+    const dirPath = path.dirname(targetPath);
+    await fs.mkdir(dirPath, { recursive: true }).catch(() => {});
+    
+    // Write the data to the file
+    await writeJsonFile(targetPath, data);
+    
+    res.json({ success: true, message: 'Certificate details saved successfully' });
+  } catch (error) {
+    console.error('Error saving certificate details:', error);
+    res.status(500).json({ success: false, message: 'Error saving certificate details' });
+  }
+});
 // Alias for /add-certificate to support legacy/external clients
 app.post('/add-certificate', async (req, res) => {
   const { studentId, certificateNumber } = req.body;
@@ -289,17 +317,6 @@ app.get('/progressreportuserofinternshipscompletedinternship', async (req, res) 
     res.json(certificates); // Return certificates directly as JSON
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error reading certificate data' });
-  }
-});
-
-// API to serve certificatesdetailsread.json file
-app.get('/certificatesdetailsread.json', async (req, res) => {
-  try {
-    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
-    res.json(certificateDetails);
-  } catch (error) {
-    console.error('Error serving certificate details:', error);
-    res.status(500).json({ success: false, message: 'Error reading certificate details' });
   }
 });
 
