@@ -320,14 +320,14 @@
         ? "http://localhost:5000"
         : "https://studentera.live";
 
-    const [
+ const [
   validStudentIds,
   internshipProgress,
   completedInternship,
   certificatesRaw
 ] = await Promise.all([
   fetch(`${apiBase}/generatedstudentidofregisteredstudentatstudenterastudentid`).then(res => res.json()),
-  fetch(`${apiBase}/api/internship-domains/all/students`).then(res => res.json()),
+  fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()), // <-- updated!
   fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
   fetch(`${apiBase}/api/certificate-details`).then(res => res.json())
 ]);
