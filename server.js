@@ -26,6 +26,8 @@ const certificatesJsonFilePath = 'lundi sutri kuch bhi/userrandomstudenteracheck
 const studentStatusJsonFilePath = 'lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json';
 const studentCertificatesFile = 'lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json';
 const studentProjectsJsonFilePath = 'lundi sutri kuch bhi/userselffetchtheirprojectsofapplieddomainuserprojects.json';
+const internshipDomainsFilePath = 'lundi sutri kuch bhi/internshipdomains.json';
+const certificateDetailsFilePath = 'lundi sutri kuch bhi/certificatesdetailsread.json';
 
 // In-memory data store
 let certificates = [];
@@ -291,6 +293,425 @@ app.post('/addStudent', async (req, res) => {
   } catch (err) {
     console.error('Error:', err);
     return res.status(500).json({ success: false, message: 'Error processing request' });
+  }
+});
+
+// ============= INTERNSHIP DOMAINS ENDPOINTS =============
+
+// API to get all internship domains
+app.get('/api/internship-domains', async (req, res) => {
+  try {
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    res.json(domains);
+  } catch (error) {
+    console.error('Error fetching internship domains:', error);
+    res.status(500).json({ success: false, message: 'Error fetching internship domains' });
+  }
+});
+
+// API to get a specific internship domain by name
+app.get('/api/internship-domains/:domainName', async (req, res) => {
+  try {
+    const { domainName } = req.params;
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    const domain = domains.find(d => d.internshipDomain === domainName);
+    
+    if (!domain) {
+      return res.status(404).json({ success: false, message: 'Internship domain not found' });
+    }
+    
+    res.json(domain);
+  } catch (error) {
+    console.error('Error fetching internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error fetching internship domain' });
+  }
+});
+
+// API to add a new internship domain
+app.post('/api/internship-domains', async (req, res) => {
+  try {
+    const { internshipDomain, pdfFile } = req.body;
+    
+    if (!internshipDomain) {
+      return res.status(400).json({ success: false, message: 'Internship domain name is required' });
+    }
+    
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    
+    // Check if domain already exists
+    if (domains.some(d => d.internshipDomain === internshipDomain)) {
+      return res.status(400).json({ success: false, message: 'Internship domain already exists' });
+    }
+    
+    // Create new domain with empty studentIds array
+    const newDomain = {
+      internshipDomain,
+      studentIds: [],
+      pdfFile: pdfFile || `tasks/projects/${internshipDomain}.pdf` // Default PDF path if not provided
+    };
+    
+    domains.push(newDomain);
+    await writeJsonFile(internshipDomainsFilePath, domains);
+    
+    res.status(201).json({ success: true, message: 'Internship domain added successfully', domain: newDomain });
+  } catch (error) {
+    console.error('Error adding internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error adding internship domain' });
+  }
+});
+
+// API to update an existing internship domain
+app.put('/api/internship-domains/:domainName', async (req, res) => {
+  try {
+    const { domainName } = req.params;
+    const { newDomainName, pdfFile } = req.body;
+    
+    if (!newDomainName && !pdfFile) {
+      return res.status(400).json({ success: false, message: 'At least one field to update is required' });
+    }
+    
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    const domainIndex = domains.findIndex(d => d.internshipDomain === domainName);
+    
+    if (domainIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Internship domain not found' });
+    }
+    
+    // If new domain name is provided and it's different from the current one
+    if (newDomainName && newDomainName !== domainName) {
+      // Check if the new name already exists
+      if (domains.some(d => d.internshipDomain === newDomainName)) {
+        return res.status(400).json({ success: false, message: 'New domain name already exists' });
+      }
+      domains[domainIndex].internshipDomain = newDomainName;
+    }
+    
+    // Update PDF file if provided
+    if (pdfFile) {
+      domains[domainIndex].pdfFile = pdfFile;
+    }
+    
+    await writeJsonFile(internshipDomainsFilePath, domains);
+    
+    res.json({ success: true, message: 'Internship domain updated successfully', domain: domains[domainIndex] });
+  } catch (error) {
+    console.error('Error updating internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error updating internship domain' });
+  }
+});
+
+// API to delete an internship domain
+app.delete('/api/internship-domains/:domainName', async (req, res) => {
+  try {
+    const { domainName } = req.params;
+    
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    const initialLength = domains.length;
+    
+    const updatedDomains = domains.filter(d => d.internshipDomain !== domainName);
+    
+    if (updatedDomains.length === initialLength) {
+      return res.status(404).json({ success: false, message: 'Internship domain not found' });
+    }
+    
+    await writeJsonFile(internshipDomainsFilePath, updatedDomains);
+    
+    res.json({ success: true, message: 'Internship domain deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error deleting internship domain' });
+  }
+});
+
+// API to add a student to an internship domain
+app.post('/api/internship-domains/:domainName/students', async (req, res) => {
+  try {
+    const { domainName } = req.params;
+    const { studentId } = req.body;
+    
+    if (!studentId) {
+      return res.status(400).json({ success: false, message: 'Student ID is required' });
+    }
+    
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    const domain = domains.find(d => d.internshipDomain === domainName);
+    
+    if (!domain) {
+      return res.status(404).json({ success: false, message: 'Internship domain not found' });
+    }
+    
+    // Check if student is already in the domain
+    if (domain.studentIds.includes(studentId)) {
+      return res.status(400).json({ success: false, message: 'Student is already enrolled in this domain' });
+    }
+    
+    // Add student to the domain
+    domain.studentIds.push(studentId);
+    await writeJsonFile(internshipDomainsFilePath, domains);
+    
+    res.json({ success: true, message: 'Student added to internship domain successfully' });
+  } catch (error) {
+    console.error('Error adding student to internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error adding student to internship domain' });
+  }
+});
+
+// API to remove a student from an internship domain
+app.delete('/api/internship-domains/:domainName/students/:studentId', async (req, res) => {
+  try {
+    const { domainName, studentId } = req.params;
+    
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    const domain = domains.find(d => d.internshipDomain === domainName);
+    
+    if (!domain) {
+      return res.status(404).json({ success: false, message: 'Internship domain not found' });
+    }
+    
+    // Check if student is in the domain
+    if (!domain.studentIds.includes(studentId)) {
+      return res.status(404).json({ success: false, message: 'Student not found in this domain' });
+    }
+    
+    // Remove student from the domain
+    domain.studentIds = domain.studentIds.filter(id => id !== studentId);
+    await writeJsonFile(internshipDomainsFilePath, domains);
+    
+    res.json({ success: true, message: 'Student removed from internship domain successfully' });
+  } catch (error) {
+    console.error('Error removing student from internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error removing student from internship domain' });
+  }
+});
+
+// API to get all students in an internship domain
+app.get('/api/internship-domains/:domainName/students', async (req, res) => {
+  try {
+    const { domainName } = req.params;
+    
+    const domains = await readJsonFile(internshipDomainsFilePath, []);
+    const domain = domains.find(d => d.internshipDomain === domainName);
+    
+    if (!domain) {
+      return res.status(404).json({ success: false, message: 'Internship domain not found' });
+    }
+    
+    res.json({ success: true, domainName, students: domain.studentIds });
+  } catch (error) {
+    console.error('Error fetching students in internship domain:', error);
+    res.status(500).json({ success: false, message: 'Error fetching students in internship domain' });
+  }
+});
+
+// ============= CERTIFICATE DETAILS ENDPOINTS =============
+
+// API to save certificate details
+app.post('/api/certificate-details', async (req, res) => {
+  try {
+    const { 
+      studentId, 
+      certificateNumber, 
+      name, 
+      course, 
+      duration, 
+      college, 
+      issuedDate 
+    } = req.body;
+    
+    // Validate required fields
+    if (!studentId || !certificateNumber || !name || !course || !duration || !college || !issuedDate) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'All fields are required: studentId, certificateNumber, name, course, duration, college, issuedDate' 
+      });
+    }
+    
+    // Read existing certificate details
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    
+    // Check if certificate with this number already exists
+    const existingCertificate = certificateDetails.find(cert => cert.certificateNumber === certificateNumber);
+    if (existingCertificate) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Certificate with this number already exists' 
+      });
+    }
+    
+    // Create new certificate detail object
+    const newCertificateDetail = {
+      studentId,
+      certificateNumber,
+      name,
+      course,
+      duration,
+      college,
+      issuedDate,
+      createdAt: new Date().toISOString()
+    };
+    
+    // Add to the array
+    certificateDetails.push(newCertificateDetail);
+    
+    // Save back to file
+    await writeJsonFile(certificateDetailsFilePath, certificateDetails);
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Certificate details saved successfully', 
+      certificate: newCertificateDetail 
+    });
+  } catch (error) {
+    console.error('Error saving certificate details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error saving certificate details' 
+    });
+  }
+});
+
+// API to get all certificate details
+app.get('/api/certificate-details', async (req, res) => {
+  try {
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    res.json(certificateDetails);
+  } catch (error) {
+    console.error('Error fetching certificate details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching certificate details' 
+    });
+  }
+});
+
+// API to get certificate details by certificate number
+app.get('/api/certificate-details/:certificateNumber', async (req, res) => {
+  try {
+    const { certificateNumber } = req.params;
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    
+    const certificate = certificateDetails.find(cert => cert.certificateNumber === certificateNumber);
+    
+    if (!certificate) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Certificate not found' 
+      });
+    }
+    
+    res.json(certificate);
+  } catch (error) {
+    console.error('Error fetching certificate details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching certificate details' 
+    });
+  }
+});
+
+// API to get certificate details by student ID
+app.get('/api/certificate-details/student/:studentId', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    
+    const certificates = certificateDetails.filter(cert => cert.studentId === studentId);
+    
+    res.json(certificates);
+  } catch (error) {
+    console.error('Error fetching certificate details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching certificate details' 
+    });
+  }
+});
+
+// API to update certificate details
+app.put('/api/certificate-details/:certificateNumber', async (req, res) => {
+  try {
+    const { certificateNumber } = req.params;
+    const { 
+      studentId, 
+      name, 
+      course, 
+      duration, 
+      college, 
+      issuedDate 
+    } = req.body;
+    
+    // Read existing certificate details
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    
+    // Find the certificate to update
+    const certificateIndex = certificateDetails.findIndex(cert => cert.certificateNumber === certificateNumber);
+    
+    if (certificateIndex === -1) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Certificate not found' 
+      });
+    }
+    
+    // Update the certificate fields if provided
+    if (studentId) certificateDetails[certificateIndex].studentId = studentId;
+    if (name) certificateDetails[certificateIndex].name = name;
+    if (course) certificateDetails[certificateIndex].course = course;
+    if (duration) certificateDetails[certificateIndex].duration = duration;
+    if (college) certificateDetails[certificateIndex].college = college;
+    if (issuedDate) certificateDetails[certificateIndex].issuedDate = issuedDate;
+    
+    // Add updated timestamp
+    certificateDetails[certificateIndex].updatedAt = new Date().toISOString();
+    
+    // Save back to file
+    await writeJsonFile(certificateDetailsFilePath, certificateDetails);
+    
+    res.json({ 
+      success: true, 
+      message: 'Certificate details updated successfully', 
+      certificate: certificateDetails[certificateIndex] 
+    });
+  } catch (error) {
+    console.error('Error updating certificate details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error updating certificate details' 
+    });
+  }
+});
+
+// API to delete certificate details
+app.delete('/api/certificate-details/:certificateNumber', async (req, res) => {
+  try {
+    const { certificateNumber } = req.params;
+    
+    // Read existing certificate details
+    const certificateDetails = await readJsonFile(certificateDetailsFilePath, []);
+    
+    // Filter out the certificate to delete
+    const updatedCertificateDetails = certificateDetails.filter(cert => cert.certificateNumber !== certificateNumber);
+    
+    if (updatedCertificateDetails.length === certificateDetails.length) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Certificate not found' 
+      });
+    }
+    
+    // Save back to file
+    await writeJsonFile(certificateDetailsFilePath, updatedCertificateDetails);
+    
+    res.json({ 
+      success: true, 
+      message: 'Certificate details deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Error deleting certificate details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error deleting certificate details' 
+    });
   }
 });
 
