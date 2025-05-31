@@ -316,18 +316,20 @@
 
     try {
       // Fetch JSON Data
-      const apiBase = window.location.hostname === "localhost"
-        ? "http://localhost:5000"
-        : "https://studentera.live";
 
- const [
+
+const apiBase = window.location.hostname === "localhost"
+  ? "http://localhost:5000"
+  : "https://studentera.live";
+
+const [
   validStudentIds,
   internshipProgress,
   completedInternship,
   certificatesRaw
 ] = await Promise.all([
   fetch(`${apiBase}/generatedstudentidofregisteredstudentatstudenterastudentid`).then(res => res.json()),
-  fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()), // <-- updated!
+  fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
   fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
   fetch(`${apiBase}/api/certificate-details`).then(res => res.json())
 ]);
