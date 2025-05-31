@@ -12,10 +12,6 @@
     "certificateNumber": "CERT456"
   },
   {
-    "studentId": "demo",
-    "certificateNumber": "CERT004"
-  },
-  {
     "studentId": "5566",
     "certificateNumber": "CERT005"
   }
