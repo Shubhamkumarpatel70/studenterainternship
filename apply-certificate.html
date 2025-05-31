@@ -316,12 +316,29 @@
 
     try {
       // Fetch JSON Data
-      const [validStudentIds, internshipProgress, completedInternship, certificates] = await Promise.all([
-        fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json()),
-        fetch('lundi sutri kuch bhi/certificatesdetailsread.json').then(res => res.json())
-      ]);
+      let validStudentIds, internshipProgress, completedInternship, certificates;
+      
+      try {
+        // Fetch each file separately to better handle errors
+        validStudentIds = await fetch('lundi sutri kuch bhi/generatedstudentidofregisteredstudentatstudenterastudentid.json').then(res => res.json());
+        internshipProgress = await fetch('lundi sutri kuch bhi/checkprogressofinternshipofusersinternshipprogress.json').then(res => res.json());
+        completedInternship = await fetch('lundi sutri kuch bhi/progressreportuserofinternshipscompletedinternship.json').then(res => res.json());
+        
+        // Explicitly ensure certificates is an array
+        const certificatesResponse = await fetch('lundi sutri kuch bhi/certificatesdetailsread.json');
+        const certificatesData = await certificatesResponse.json();
+        certificates = Array.isArray(certificatesData) ? certificatesData : [];
+        
+        if (!Array.isArray(certificates)) {
+          console.error('Certificates data is not an array:', certificates);
+          throw new Error('Invalid certificates data format');
+        }
+      } catch (fetchError) {
+        console.error('Error fetching data:', fetchError);
+        showMessage("Error loading certificate data. Please try again later.", "error");
+        spinner.classList.add("hidden");
+        return;
+      }
 
       // Verification Logic
       if (!validStudentIds.validStudentIds.includes(studentId)) {
