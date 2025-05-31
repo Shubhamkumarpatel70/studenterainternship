@@ -320,29 +320,27 @@
         ? "http://localhost:5000"
         : "https://studentera.live";
 
-      const [
-        validStudentIds,
-        internshipProgress,
-        completedInternship,
-        certificatesRaw
-      ] = await Promise.all([
-        fetch(`${apiBase}/generatedstudentidofregisteredstudentatstudenterastudentid`).then(res => res.json()),
-        fetch(`${apiBase}/checkprogressofinternshipofusersinternshipprogress.json`).then(res => res.json()),
-        fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
-        fetch(`${apiBase}/certificatesdetailsread.json`).then(res => res.json())
-      ]);
+    const [
+  validStudentIds,
+  internshipProgress,
+  completedInternship,
+  certificatesRaw
+] = await Promise.all([
+  fetch(`${apiBase}/generatedstudentidofregisteredstudentatstudenterastudentid`).then(res => res.json()),
+  fetch(`${apiBase}/api/internship-domains/all/students`).then(res => res.json()),
+  fetch(`${apiBase}/progressreportuserofinternshipscompletedinternship`).then(res => res.json()),
+  fetch(`${apiBase}/api/certificate-details`).then(res => res.json())
+]);
 
-      // Ensure certificates is always an array
-      const certificates = Array.isArray(certificatesRaw)
-        ? certificatesRaw
-        : (certificatesRaw.certificates || certificatesRaw.data || []);
+const certificates = Array.isArray(certificatesRaw)
+  ? certificatesRaw
+  : (certificatesRaw.certificates || certificatesRaw.data || []);
 
-      // Verification Logic
-      if (!validStudentIds.validStudentIds.includes(studentId)) {
-        showMessage("Invalid Student ID.", "error");
-        spinner.classList.add("hidden");
-        return;
-      }
+if (!validStudentIds || !Array.isArray(validStudentIds.validStudentIds) || !validStudentIds.validStudentIds.includes(studentId)) {
+  showMessage("Invalid Student ID.", "error");
+  spinner.classList.add("hidden");
+  return;
+}
 
       const internshipStatus = internshipProgress.find(entry => entry.studentId === studentId);
       if (!internshipStatus || internshipStatus.status !== "complete") {
