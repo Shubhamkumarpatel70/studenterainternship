@@ -564,12 +564,6 @@
         // Check on initial load
         handleScroll();
         
-        // Add admin links for authorized users (you might want to restrict this in production)
-        const adminLink = document.createElement('a');
-        adminLink.href = 'admin/notifications.html';
-        adminLink.className = 'text-xs text-blue-600 hover:text-blue-800 absolute right-2 bottom-2';
-        adminLink.textContent = 'Manage';
-        adminLink.title = 'Manage Notifications';
         
         // Add admin dashboard link
         const dashboardLink = document.createElement('a');
